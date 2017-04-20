@@ -1,0 +1,434 @@
+
+//Ahmed's Global Vars
+var displaySplashScreen = false;
+var startDescent = false;
+var rocketX, rocketY, timeCount, u_count, l_count, r_count, global_count, switchValue, windSpeed;
+var setReset = false;
+var didLand = false;
+rocketX = rocketY = 80;
+timeCount = u_count = l_count = r_count = global_count = 1;
+switchValue = 0;
+
+//Matthew's Global Vars
+var RS_x, RS_y, RS_scale, RS_dx, RS_dy, RS_dsc;
+var	LZ_x, LZ_y, LZ_sc;
+var AL_x, AL_y, AL_dy;
+var ramp_l, ramp_dl;
+var time, timer;
+
+function setup()
+{
+	createCanvas(500,500);
+
+	//Ahmed's Setup
+	displaySplashScreen = true;
+
+	//Matthew's Setup
+	RS_x = 130;
+	RS_y = height-65;
+	RS_scale = .5;
+	RS_dx = 1.2;
+	RS_dy = -1.55;
+	RS_dsc = .01;
+	
+	LZ_x = 0;
+	LZ_y = 400;
+	LZ_sc = 1;
+	
+	AL_x = 250;
+	AL_y = 175;
+	AL_dy = -.5
+
+	ramp_l = 0;
+	ramp_dl = 1;
+	
+	time =0
+	timer = 1;
+}
+
+function draw(){
+   //Ahmed's Draw
+   if(displaySplashScreen){
+      splashScreen();
+   }
+   if(startDescent && !didLand){
+      spaceshipDescent();
+   }
+
+   if (didLand) {
+		background(40, 40, 40);
+		ifLand();
+    }
+}
+
+//--------------------------------------------------------------------------
+
+function drawRocketShip(xRS, yRS, scRS, thrust, outline) //Draws Rocket ship
+/* xRS: x-coordinate
+ * yRS: y-coordinate
+ * scRS: scale
+ * tRS: transparency
+ */
+
+{
+	var t = 255;
+
+	if (outline) {
+		t = 50
+	}
+
+	push();
+		translate(xRS, yRS);
+		scale(scRS);
+		strokeWeight(0);
+
+
+		if (thrust) {
+			//Fire
+			fill(255,random(100,255),random(40,60));
+			beginShape();
+			vertex(-20,0);
+			vertex(-12,random(10,70));
+			vertex(0,random(10,70));
+			vertex(12,random(10,70));
+			vertex(20,0);
+			endShape(CLOSE);
+		}
+		
+		//body
+	  	fill(67, 74, 84, t);
+	  	ellipse(250-250, 300-300, 40, 40);
+	  	triangle(150-250, 240-300, 250-250, 175-300, 350-250, 240-300);
+		ellipse(250-250, 164-300, 40, 120);
+	  
+		fill(242, 243, 244, t);
+		triangle(160-250, 240-300, 250-250, 190-300, 340-250, 240-300);
+	  
+		fill(255, t);
+		ellipse(250-250, 164-300, 40, 100);
+		rect(220-250, 275-300, 60, 25);
+	  
+		//back 
+		fill(67, 74, 84, t);
+		rect(150-250, 240-300, 200, 30);
+	 
+		fill(242, 243, 244, t);
+		rect(160-250, 240-300, 180, 20);
+	  
+		fill(255, t);
+		ellipse(250-250, 275-300, 60, 50);
+	  
+		fill(145, 151, 160, t);
+		rect(248-250, 265-300, 4, 50);
+
+		fill(255, t);	
+		rect(230-250, 164-300, 40, 100);
+	  
+		fill(102, t);
+		beginShape();
+	  		vertex(250-250, 160-300);
+			vertex(253-250, 173-300);
+			vertex(265-250, 170-300);
+			vertex(255-250, 180-300);
+			vertex(260-250, 190-300);
+			vertex(250-250, 185-300);
+			vertex(240-250, 190-300);
+			vertex(245-250, 180-300);
+			vertex(235-250, 170-300);
+			vertex(247-250, 173-300);
+		endShape(CLOSE);
+	pop();
+}
+
+//Ahmed's Function
+
+function splashScreen(){
+   background(230,230,230);
+
+   fill(255);
+   rect(width/2 - 150, height/2 - 200, 300, 125, 40);
+
+   //textAlign(CENTER);
+
+   fill(40);
+   textSize(30);
+   text("Spaceships Descent", width/2 - 135, 125);
+
+   textSize(20);
+   text("Click anywhere to start...", width/2 - 100, 400);
+}
+
+function mouseClicked(){
+   if(displaySplashScreen == true){
+      displaySplashScreen = false;
+      startDescent = true;
+   }
+}
+
+function sleep(miliseconds) {
+   var currentTime = new Date().getTime();
+
+   while (currentTime + miliseconds >= new Date().getTime()) {
+   }
+}
+
+function spaceshipDescent(){
+   background(40,40,40);
+
+   if(setReset){
+      sleep(1000);
+      reset();
+      setReset = false;
+   }
+
+   fill(130);
+ 	noStroke();
+   rect(0, height - 100, width, 100);
+
+   fill(70);
+   strokeWeight(2);
+
+   ellipse(130, height - 65, 180, 40);
+
+
+   var planet_gravity, downSpeed, rocket_dX, rocket_dY, thrustersOn;
+
+
+   var windChangeWarning = switchValue - global_count;
+
+   if(windChangeWarning < 60){
+      textAlign(CENTER);
+      textSize(25);
+      fill(230);
+      text("Warning! Wind Change Incoming", width/2, 200);
+   } 
+
+   if(global_count > switchValue){
+      global_count = 0;
+      switchValue = random(100,400);
+      windSpeed = random(-2,2);
+   }
+
+
+   if(windSpeed > 0){
+      noStroke();
+      rect(width - 100, 47, 40, 6);
+      triangle(width - 60, 40, width - 60, 60, width - 40, 50);
+      textSize(15);
+      textAlign(LEFT);
+      text("Wind Speed: " + truncate(windSpeed, 3), width - 145, 80);
+   }
+   if(windSpeed < 0){
+      noStroke();
+      rect(width - 100, 47, 40, 6);
+      triangle(width - 100, 40, width - 100, 60, width - 120, 50);
+      textSize(15);
+      textAlign(LEFT);
+      text("Wind Speed: " + truncate(windSpeed, 3), width - 145, 80);
+   }
+  
+
+   planet_gravity = 0.9;
+   thrustersOn = false;
+
+   downSpeed = timeCount * planet_gravity;
+
+   rocketY += downSpeed;
+
+   println("Before:" + rocketX);
+   rocketX += windSpeed;
+   println("After:" + rocketX);
+
+   global_count++;
+
+   timeCount += 0.07;
+
+   drawRocketShip(130,height - 65, RS_scale, false, true);
+
+   if(keyIsDown(UP_ARROW)){
+      //rocketY -= planet_gravity + 1.01 * u_count;
+      rocketY += downSpeed - 1.01 * u_count;
+      timeCount = 1;
+      u_count += .02;
+      thrustersOn = true;
+   }else{
+      u_count = 1;
+   }
+
+   if(keyIsDown(RIGHT_ARROW)){
+      rocketX += 1.01 * l_count;
+      l_count += .02;
+      thrustersOn = true;
+   }else{
+      l_count = 1;
+   }
+
+   if(keyIsDown(LEFT_ARROW)){
+      rocketX -= 1.01 * r_count;
+      r_count += .02;
+      thrustersOn = true;
+   }else{
+      r_count = 1;
+   }
+
+   drawRocketShip(rocketX, rocketY, RS_scale, thrustersOn, false);
+
+   //Allows for side to side motion
+   if(rocketX + 40 < 0){
+      rocketX = width;
+   }
+   if(rocketX - 40 > width){
+      rocketX = 0;
+   }
+
+   //If the user leaves the top of the screen
+   if(rocketY + 20 < 0){
+      fill(230,20,20);
+      textAlign(CENTER);
+      textSize(30);
+      text("You left the planet!", width/2, 125);
+      setReset = true;
+   }
+
+   if(rocketY + 50 > height){
+      fill(230,20,20);
+      textAlign(CENTER);
+      textSize(30);
+      text("You crashed!", width/2, 125);
+      setReset = true;
+   }
+
+   
+   if (rocketX > 125 && rocketX < 135 && rocketY < height - 55 && rocketY > height - 75){
+      didLand = true;
+   }
+
+   function reset(){
+      rocketX = random(80, width-80);
+      rocketY = 80;
+      rocket_dX = rocket_dY = 0;
+      downSpeed = 1;
+      timeCount = 1;
+      global_count = 1;
+      switchValue = 0;
+      startDescent = false;
+      displaySplashScreen = true;
+   }
+   
+   function truncate (num, places) {
+      return Math.trunc(num * Math.pow(10, places)) / Math.pow(10, places);
+   }
+}
+
+//Matthew's Functions
+
+function drawLandingZone(xLZ, yLZ, scLZ)
+/*
+ * xLS: x-coordinate of ground
+ * yLS: y-coordinate of ground
+ * scLS: scale of ground
+ */
+{
+	push();
+		translate(xLZ, yLZ);
+		scale(scLZ);
+		
+		noStroke();
+		fill(130);
+		rect(-100, 0, width + 100, 200);
+
+		fill(70);
+		ellipse(130, 35, 180, 40);
+	pop();
+}
+
+function drawAirlock(x, y)
+{
+	push();
+		translate(x, y);
+
+		noStroke();
+		fill(0);
+		ellipse(0, -10, 30);
+		rect(-15.3, -10, 30, 20);
+	pop();
+}
+
+function openAirlock(x, y, sc)
+{
+	push();
+		translate(x, y);
+		scale(1.1);
+		
+		noStroke();
+		fill(255);
+		ellipse(0, -10, 30);
+		rect(-15.4, -10, 30, 20);
+	pop();
+}
+
+function moveRamp(x, y, l)
+{
+	push();
+		translate(x, y);
+
+		fill(128);
+		stroke(0);
+		strokeWeight(.5);
+		beginShape();
+			vertex(0, 0);
+			vertex(29.5, 0);
+			vertex(30+l, l);
+			vertex(0+l, l);
+		endShape(CLOSE);
+	pop();
+}
+
+function ifLand()
+{
+	drawLandingZone(LZ_x, LZ_y, LZ_sc);
+	drawRocketShip(RS_x, RS_y, RS_scale);
+	
+	if (time > 100) {
+		LZ_y += RS_dy;
+		LZ_sc += RS_dsc;
+		
+		RS_x += RS_dx;
+		RS_y += RS_dy;
+		RS_scale += RS_dsc;
+
+		if (RS_x > 250)
+			RS_dx = 0;
+		if (RS_y < 280)
+			RS_dy = 0;
+
+		if (RS_scale > 1.5)
+			RS_dsc = 0;
+	}
+
+	if (time > 275) {
+		drawAirlock(250, 175);
+		openAirlock(AL_x, AL_y);
+	}
+
+	if (time > 275) {
+		AL_y += AL_dy;
+
+		if (AL_y < 140)
+			AL_dy = 0;
+	}
+
+	if (time > 350) {
+		moveRamp(235, 185, ramp_l);
+		ramp_l += ramp_dl;
+
+		if (ramp_l > 140)
+			ramp_dl = 0;
+	}
+
+	time += timer
+
+	if (time > 360)
+		timer = 0;
+
+}
